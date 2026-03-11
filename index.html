@@ -32,9 +32,7 @@
       width: 220px;
     }
     button:active { background: #555; }
-    #board-container {
-      position: relative;
-    }
+    #board-container { position: relative; }
     #board {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -43,13 +41,6 @@
       border: 3px solid #555;
       touch-action: none;
     }
-    #solution-overlay {
-      display: none;
-      position: absolute;
-      top: 0; left: 0;
-      border: 3px solid #555;
-    }
-    #solution-overlay.visible { display: block; }
     .tile {
       width: 90px;
       height: 90px;
@@ -133,7 +124,6 @@
     <div id="moves">Movimientos: 0</div>
     <div id="board-container">
       <div id="board"></div>
-      <canvas id="solution-overlay"></canvas>
     </div>
     <div id="message"></div>
     <button id="btn-solution">Ver solución</button>
@@ -187,7 +177,6 @@
     const btnPlay = document.getElementById('btn-play');
     const btnChange = document.getElementById('btn-change');
     const btnSolution = document.getElementById('btn-solution');
-    const solutionOverlay = document.getElementById('solution-overlay');
 
     window.onload = () => {
       imageData = localStorage.getItem('puzzle-image');
@@ -253,7 +242,6 @@
       showMenu();
     };
 
-    // --- Ver solución ---
     btnSolution.onclick = () => {
       if (shuffling) return;
       if (showingSolution) {
@@ -264,7 +252,6 @@
     };
 
     function showSolution() {
-      if (shuffling) return;
       showingSolution = true;
       btnSolution.textContent = 'Volver al juego';
       btnSolution.classList.add('active');
@@ -277,10 +264,8 @@
       btnSolution.textContent = 'Ver solución';
       btnSolution.classList.remove('active');
       renderBoardFromTiles(tiles);
-    }    
+    }
 
-
-    // --- Carga de imagen ---
     fileInput.onchange = e => {
       const file = e.target.files[0];
       if (!file) return;
@@ -307,7 +292,6 @@
       fileInput.value = '';
     };
 
-    // --- Lógica del puzzle ---
     function startGame() {
       hideSolution();
       moveCount = 0;
@@ -338,7 +322,6 @@
       shuffling = true;
       const allMoves = buildShuffleMoves();
 
-      // Apply all moves to get final state
       tiles = Array.from({length: GRID * GRID}, (_, i) => i);
       emptyIndex = GRID * GRID - 1;
       allMoves.forEach(m => {
@@ -347,10 +330,8 @@
         emptyIndex = m.from;
       });
 
-      // Now animate only last SHUFFLE_ANIM_STEPS moves visually
       const animMoves = allMoves.slice(-SHUFFLE_ANIM_STEPS);
 
-      // Rewind tiles to state before animMoves
       let animTiles = Array.from({length: GRID * GRID}, (_, i) => i);
       let animEmpty = GRID * GRID - 1;
       allMoves.slice(0, SHUFFLE_MOVES - SHUFFLE_ANIM_STEPS).forEach(m => {
@@ -413,7 +394,6 @@
       }
     }
 
-    // --- Render ---
     function renderBoard() {
       renderBoardFromTiles(tiles);
     }
@@ -421,59 +401,60 @@
     function renderBoardFromTiles(t) {
       boardEl.innerHTML = '';
       const img = new Image();
-      img.src = imageData;
-
-      t.forEach((tileValue, index) => {
-        if (tileValue === GRID * GRID - 1) {
-          const empty = document.createElement('div');
-          empty.className = 'tile-empty';
-          boardEl.appendChild(empty);
-          return;
-        }
-
-        const srcRow = Math.floor(tileValue / GRID);
-        const srcCol = tileValue % GRID;
-
-        const c = document.createElement('canvas');
-        c.className = 'tile';
-        c.width = TILE;
-        c.height = TILE;
-        const cx = c.getContext('2d');
-        cx.drawImage(img, srcCol * TILE, srcRow * TILE, TILE, TILE, 0, 0, TILE, TILE);
-
-        c.addEventListener('touchstart', e => {
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
-          e.preventDefault();
-        }, { passive: false });
-
-        c.addEventListener('touchend', e => {
-          const dx = e.changedTouches[0].clientX - touchStartX;
-          const dy = e.changedTouches[0].clientY - touchStartY;
-          const absDx = Math.abs(dx);
-          const absDy = Math.abs(dy);
-
-          if (absDx < 10 && absDy < 10) {
-            moveTile(index);
-          } else {
-            const row = Math.floor(index / GRID);
-            const col = index % GRID;
-            const eRow = Math.floor(emptyIndex / GRID);
-            const eCol = emptyIndex % GRID;
-            if (absDx > absDy) {
-              if (dx > 0 && eCol === col + 1 && eRow === row) moveTile(index);
-              if (dx < 0 && eCol === col - 1 && eRow === row) moveTile(index);
-            } else {
-              if (dy > 0 && eRow === row + 1 && eCol === col) moveTile(index);
-              if (dy < 0 && eRow === row - 1 && eCol === col) moveTile(index);
-            }
+      img.onload = () => {
+        t.forEach((tileValue, index) => {
+          if (tileValue === GRID * GRID - 1) {
+            const empty = document.createElement('div');
+            empty.className = 'tile-empty';
+            boardEl.appendChild(empty);
+            return;
           }
-          e.preventDefault();
-        }, { passive: false });
 
-        c.addEventListener('click', () => moveTile(index));
-        boardEl.appendChild(c);
-      });
+          const srcRow = Math.floor(tileValue / GRID);
+          const srcCol = tileValue % GRID;
+
+          const c = document.createElement('canvas');
+          c.className = 'tile';
+          c.width = TILE;
+          c.height = TILE;
+          const cx = c.getContext('2d');
+          cx.drawImage(img, srcCol * TILE, srcRow * TILE, TILE, TILE, 0, 0, TILE, TILE);
+
+          c.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            e.preventDefault();
+          }, { passive: false });
+
+          c.addEventListener('touchend', e => {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            const absDx = Math.abs(dx);
+            const absDy = Math.abs(dy);
+
+            if (absDx < 10 && absDy < 10) {
+              moveTile(index);
+            } else {
+              const row = Math.floor(index / GRID);
+              const col = index % GRID;
+              const eRow = Math.floor(emptyIndex / GRID);
+              const eCol = emptyIndex % GRID;
+              if (absDx > absDy) {
+                if (dx > 0 && eCol === col + 1 && eRow === row) moveTile(index);
+                if (dx < 0 && eCol === col - 1 && eRow === row) moveTile(index);
+              } else {
+                if (dy > 0 && eRow === row + 1 && eCol === col) moveTile(index);
+                if (dy < 0 && eRow === row - 1 && eCol === col) moveTile(index);
+              }
+            }
+            e.preventDefault();
+          }, { passive: false });
+
+          c.addEventListener('click', () => moveTile(index));
+          boardEl.appendChild(c);
+        });
+      };
+      img.src = imageData;
     }
   </script>
 </body>
