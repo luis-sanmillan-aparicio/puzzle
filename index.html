@@ -129,6 +129,7 @@
     let mouseStartX, mouseStartY, mouseTileIndex;
     let shuffling = false;
     let showingSolution = false;
+    let touching = false;
 
     const menuEl = document.getElementById('menu');
     const gameEl = document.getElementById('game');
@@ -152,6 +153,7 @@
     };
 
     document.addEventListener('mouseup', e => {
+      if (touching) return;
       if (mouseTileIndex === null || mouseTileIndex === undefined) return;
       const index = mouseTileIndex;
       mouseTileIndex = null;
@@ -221,7 +223,7 @@
 
     function showSolution() {
       showingSolution = true;
-      btnSolution.textContent = 'Volver';
+      btnSolution.textContent = 'Volver al juego';
       btnSolution.classList.add('active');
       const solvedTiles = Array.from({length: GRID * GRID}, (_, i) => i);
       renderBoardFromTiles(solvedTiles);
@@ -389,6 +391,7 @@
           cx.drawImage(img, srcCol * TILE, srcRow * TILE, TILE, TILE, 0, 0, TILE, TILE);
 
           c.addEventListener('touchstart', e => {
+            touching = true;
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
             e.preventDefault();
@@ -415,6 +418,7 @@
               }
             }
             e.preventDefault();
+            setTimeout(() => { touching = false; }, 500);
           }, { passive: false });
 
           c.addEventListener('mousedown', e => {
