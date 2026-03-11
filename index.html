@@ -253,7 +253,7 @@
 
     function showSolution() {
       showingSolution = true;
-      btnSolution.textContent = 'Volver al juego';
+      btnSolution.textContent = 'Volver';
       btnSolution.classList.add('active');
       const solvedTiles = Array.from({length: GRID * GRID}, (_, i) => i);
       renderBoardFromTiles(solvedTiles);
