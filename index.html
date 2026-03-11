@@ -450,7 +450,32 @@
             e.preventDefault();
           }, { passive: false });
 
-          c.addEventListener('click', () => moveTile(index));
+          let mouseStartX, mouseStartY;
+          c.addEventListener('mousedown', e => {
+            mouseStartX = e.clientX;
+            mouseStartY = e.clientY;
+          });
+          c.addEventListener('mouseup', e => {
+            const dx = e.clientX - mouseStartX;
+            const dy = e.clientY - mouseStartY;
+            const absDx = Math.abs(dx);
+            const absDy = Math.abs(dy);
+            if (absDx < 10 && absDy < 10) {
+              moveTile(index);
+            } else {
+              const row = Math.floor(index / GRID);
+              const col = index % GRID;
+              const eRow = Math.floor(emptyIndex / GRID);
+              const eCol = emptyIndex % GRID;
+              if (absDx > absDy) {
+                if (dx > 0 && eCol === col + 1 && eRow === row) moveTile(index);
+                if (dx < 0 && eCol === col - 1 && eRow === row) moveTile(index);
+              } else {
+                if (dy > 0 && eRow === row + 1 && eCol === col) moveTile(index);
+                if (dy < 0 && eRow === row - 1 && eCol === col) moveTile(index);
+              }
+            }
+          });
           boardEl.appendChild(c);
         });
       };
