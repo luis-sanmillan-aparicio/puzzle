@@ -405,9 +405,10 @@
     }
 
     function renderBoardFromTiles(t) {
-      boardEl.innerHTML = '';
+      
       const img = new Image();
       img.onload = () => {
+        boardEl.innerHTML = '';
         t.forEach((tileValue, index) => {
           if (tileValue === GRID * GRID - 1) {
             const empty = document.createElement('div');
