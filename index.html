@@ -164,17 +164,7 @@
       if (absDx < 10 && absDy < 10) {
         moveTile(index);
       } else {
-        const row = Math.floor(index / GRID);
-        const col = index % GRID;
-        const eRow = Math.floor(emptyIndex / GRID);
-        const eCol = emptyIndex % GRID;
-        if (absDx > absDy) {
-          if (dx > 0 && eCol === col + 1 && eRow === row) moveTile(index);
-          if (dx < 0 && eCol === col - 1 && eRow === row) moveTile(index);
-        } else {
-          if (dy > 0 && eRow === row + 1 && eCol === col) moveTile(index);
-          if (dy < 0 && eRow === row - 1 && eCol === col) moveTile(index);
-        }
+        moveBlock(index, getDirection(dx, dy));
       }
     });
 
@@ -357,6 +347,52 @@
       checkWin();
     }
 
+    // --- BLOCK MOVEMENT ---
+
+    function getDirection(dx, dy) {
+      return Math.abs(dx) > Math.abs(dy)
+        ? (dx > 0 ? 'right' : 'left')
+        : (dy > 0 ? 'down' : 'up');
+    }
+
+    function getTilesInLine(index, dir) {
+      const row = Math.floor(index / GRID);
+      const col = index % GRID;
+      const eRow = Math.floor(emptyIndex / GRID);
+      const eCol = emptyIndex % GRID;
+      const positions = [];
+      if (dir === 'right' && eRow === row && eCol > col) {
+        for (let c = col; c < eCol; c++) positions.push(row * GRID + c);
+      } else if (dir === 'left' && eRow === row && eCol < col) {
+        for (let c = col; c > eCol; c--) positions.push(row * GRID + c);
+      } else if (dir === 'down' && eCol === col && eRow > row) {
+        for (let r = row; r < eRow; r++) positions.push(r * GRID + col);
+      } else if (dir === 'up' && eCol === col && eRow < row) {
+        for (let r = row; r > eRow; r--) positions.push(r * GRID + col);
+      }
+      return positions;
+    }
+
+    function moveBlock(index, dir) {
+      if (shuffling || showingSolution) return;
+      const positions = getTilesInLine(index, dir);
+      if (positions.length === 0) return;
+      // shift tiles from the empty side toward the swiped tile
+      let dest = emptyIndex;
+      for (let i = positions.length - 1; i >= 0; i--) {
+        tiles[dest] = tiles[positions[i]];
+        dest = positions[i];
+      }
+      tiles[dest] = GRID * GRID - 1;
+      emptyIndex = dest;
+      moveCount++;
+      movesEl.textContent = `Movimientos: ${moveCount}`;
+      renderBoard();
+      checkWin();
+    }
+
+    // --- END BLOCK MOVEMENT ---
+
     function checkWin() {
       if (tiles.every((t, i) => t === i)) {
         winnerMoves.textContent = `Lo resolviste en ${moveCount} movimientos`;
@@ -405,17 +441,7 @@
             if (absDx < 10 && absDy < 10) {
               moveTile(index);
             } else {
-              const row = Math.floor(index / GRID);
-              const col = index % GRID;
-              const eRow = Math.floor(emptyIndex / GRID);
-              const eCol = emptyIndex % GRID;
-              if (absDx > absDy) {
-                if (dx > 0 && eCol === col + 1 && eRow === row) moveTile(index);
-                if (dx < 0 && eCol === col - 1 && eRow === row) moveTile(index);
-              } else {
-                if (dy > 0 && eRow === row + 1 && eCol === col) moveTile(index);
-                if (dy < 0 && eRow === row - 1 && eCol === col) moveTile(index);
-              }
+              moveBlock(index, getDirection(dx, dy));
             }
             e.preventDefault();
             setTimeout(() => { touching = false; }, 500);
